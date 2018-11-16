@@ -58,14 +58,15 @@ use Google\Cloud\Iot\V1\ListDeviceStatesResponse;
 use Google\Cloud\Iot\V1\ListDevicesRequest;
 use Google\Cloud\Iot\V1\ListDevicesResponse;
 use Google\Cloud\Iot\V1\ModifyCloudToDeviceConfigRequest;
+use Google\Cloud\Iot\V1\SendCommandToDeviceRequest;
+use Google\Cloud\Iot\V1\SendCommandToDeviceResponse;
 use Google\Cloud\Iot\V1\UpdateDeviceRegistryRequest;
 use Google\Cloud\Iot\V1\UpdateDeviceRequest;
 use Google\Protobuf\FieldMask;
 use Google\Protobuf\GPBEmpty;
 
 /**
- * Service Description: Internet of things (IoT) service. Allows to manipulate device registry
- * instances and the registration of devices (Things) to the cloud.
+ * Service Description: Internet of Things (IoT) service. Securely connect and manage IoT devices.
  *
  * This class provides the ability to make remote calls to the backing service through method
  * calls that map to API methods. Sample code to get started:
@@ -659,7 +660,7 @@ class DeviceManagerGapicClient
      *                             For example,
      *                             `projects/example-project/locations/us-central1/registries/my-registry`.
      * @param Device $device       The device registration details. The field `name` must be empty. The server
-     *                             will generate that field from the device registry `id` provided and the
+     *                             generates `name` from the device registry `id` and the
      *                             `parent` field.
      * @param array  $optionalArgs {
      *                             Optional.
@@ -770,7 +771,7 @@ class DeviceManagerGapicClient
      * }
      * ```
      *
-     * @param Device    $device       The new values for the device registry. The `id` and `num_id` fields must
+     * @param Device    $device       The new values for the device. The `id` and `num_id` fields must
      *                                be empty, and the field `name` must specify the name path. For example,
      *                                `projects/p0/locations/us-central1/registries/registry0/devices/device0`or
      *                                `projects/p0/locations/us-central1/registries/registry0/devices/{num_id}`.
@@ -899,15 +900,14 @@ class DeviceManagerGapicClient
      *                             Optional.
      *
      *     @type int[] $deviceNumIds
-     *          A list of device numerical ids. If empty, it will ignore this field. This
-     *          field cannot hold more than 10,000 entries.
+     *          A list of device numeric IDs. If empty, this field is ignored. Maximum
+     *          IDs: 10,000.
      *     @type string[] $deviceIds
-     *          A list of device string identifiers. If empty, it will ignore this field.
-     *          For example, `['device0', 'device12']`. This field cannot hold more than
-     *          10,000 entries.
+     *          A list of device string IDs. For example, `['device0', 'device12']`.
+     *          If empty, this field is ignored. Maximum IDs: 10,000
      *     @type FieldMask $fieldMask
      *          The fields of the `Device` resource to be returned in the response. The
-     *          fields `id`, and `num_id` are always returned by default, along with any
+     *          fields `id` and `num_id` are always returned, along with any
      *          other fields specified.
      *     @type int $pageSize
      *          The maximum number of resources contained in the underlying API
@@ -1319,6 +1319,75 @@ class DeviceManagerGapicClient
         return $this->startCall(
             'TestIamPermissions',
             TestIamPermissionsResponse::class,
+            $optionalArgs,
+            $request
+        )->wait();
+    }
+
+    /**
+     * Sends a command to the specified device. In order for a device to be able
+     * to receive commands, it must:
+     * 1) be connected to Cloud IoT Core using the MQTT protocol, and
+     * 2) be subscribed to the group of MQTT topics specified by
+     *    /devices/{device-id}/commands/#. This subscription will receive commands
+     *    at the top-level topic /devices/{device-id}/commands as well as commands
+     *    for subfolders, like /devices/{device-id}/commands/subfolder.
+     *    Note that subscribing to specific subfolders is not supported.
+     * If the command could not be delivered to the device, this method will
+     * return an error; in particular, if the device is not subscribed, this
+     * method will return FAILED_PRECONDITION. Otherwise, this method will
+     * return OK. If the subscription is QoS 1, at least once delivery will be
+     * guaranteed; for QoS 0, no acknowledgment will be expected from the device.
+     *
+     * Sample code:
+     * ```
+     * $deviceManagerClient = new DeviceManagerClient();
+     * try {
+     *     $formattedName = $deviceManagerClient->deviceName('[PROJECT]', '[LOCATION]', '[REGISTRY]', '[DEVICE]');
+     *     $binaryData = '';
+     *     $response = $deviceManagerClient->sendCommandToDevice($formattedName, $binaryData);
+     * } finally {
+     *     $deviceManagerClient->close();
+     * }
+     * ```
+     *
+     * @param string $name         The name of the device. For example,
+     *                             `projects/p0/locations/us-central1/registries/registry0/devices/device0` or
+     *                             `projects/p0/locations/us-central1/registries/registry0/devices/{num_id}`.
+     * @param string $binaryData   The command data to send to the device.
+     * @param array  $optionalArgs {
+     *                             Optional.
+     *
+     *     @type string $subfolder
+     *          Optional subfolder for the command. If empty, the command will be delivered
+     *          to the /devices/{device-id}/commands topic, otherwise it will be delivered
+     *          to the /devices/{device-id}/commands/{subfolder} topic. Multi-level
+     *          subfolders are allowed. This field must not have more than 256 characters,
+     *          and must not contain any MQTT wildcards ("+" or "#") or null characters.
+     *     @type RetrySettings|array $retrySettings
+     *          Retry settings to use for this call. Can be a
+     *          {@see Google\ApiCore\RetrySettings} object, or an associative array
+     *          of retry settings parameters. See the documentation on
+     *          {@see Google\ApiCore\RetrySettings} for example usage.
+     * }
+     *
+     * @return \Google\Cloud\Iot\V1\SendCommandToDeviceResponse
+     *
+     * @throws ApiException if the remote call fails
+     * @experimental
+     */
+    public function sendCommandToDevice($name, $binaryData, array $optionalArgs = [])
+    {
+        $request = new SendCommandToDeviceRequest();
+        $request->setName($name);
+        $request->setBinaryData($binaryData);
+        if (isset($optionalArgs['subfolder'])) {
+            $request->setSubfolder($optionalArgs['subfolder']);
+        }
+
+        return $this->startCall(
+            'SendCommandToDevice',
+            SendCommandToDeviceResponse::class,
             $optionalArgs,
             $request
         )->wait();

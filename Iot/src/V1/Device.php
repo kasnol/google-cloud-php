@@ -135,6 +135,14 @@ class Device extends \Google\Protobuf\Internal\Message
      */
     private $state = null;
     /**
+     * **Beta Feature**
+     * The logging verbosity for device activity. If unspecified,
+     * DeviceRegistry.log_level will be used.
+     *
+     * Generated from protobuf field <code>.google.cloud.iot.v1.LogLevel log_level = 21;</code>
+     */
+    private $log_level = 0;
+    /**
      * The metadata key-value pairs assigned to the device. This metadata is not
      * interpreted or indexed by Cloud IoT Core. It can be used to add contextual
      * information for the device.
@@ -218,6 +226,10 @@ class Device extends \Google\Protobuf\Internal\Message
      *     @type \Google\Cloud\Iot\V1\DeviceState $state
      *           [Output only] The state most recently received from the device. If no state
      *           has been reported, this field is not present.
+     *     @type int $log_level
+     *           **Beta Feature**
+     *           The logging verbosity for device activity. If unspecified,
+     *           DeviceRegistry.log_level will be used.
      *     @type array|\Google\Protobuf\Internal\MapField $metadata
      *           The metadata key-value pairs assigned to the device. This metadata is not
      *           interpreted or indexed by Cloud IoT Core. It can be used to add contextual
@@ -665,6 +677,36 @@ class Device extends \Google\Protobuf\Internal\Message
     {
         GPBUtil::checkMessage($var, \Google\Cloud\Iot\V1\DeviceState::class);
         $this->state = $var;
+
+        return $this;
+    }
+
+    /**
+     * **Beta Feature**
+     * The logging verbosity for device activity. If unspecified,
+     * DeviceRegistry.log_level will be used.
+     *
+     * Generated from protobuf field <code>.google.cloud.iot.v1.LogLevel log_level = 21;</code>
+     * @return int
+     */
+    public function getLogLevel()
+    {
+        return $this->log_level;
+    }
+
+    /**
+     * **Beta Feature**
+     * The logging verbosity for device activity. If unspecified,
+     * DeviceRegistry.log_level will be used.
+     *
+     * Generated from protobuf field <code>.google.cloud.iot.v1.LogLevel log_level = 21;</code>
+     * @param int $var
+     * @return $this
+     */
+    public function setLogLevel($var)
+    {
+        GPBUtil::checkEnum($var, \Google\Cloud\Iot\V1\LogLevel::class);
+        $this->log_level = $var;
 
         return $this;
     }
